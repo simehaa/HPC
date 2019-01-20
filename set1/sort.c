@@ -1,8 +1,8 @@
 int main() {
-
+  int arr[7] = {2,4,8,1,6,2,3};
+  sort()
   return 0;
 }
-
 
 void swap(int *a, int *b) {
   int t=*a; *a=*b; *b=t;
