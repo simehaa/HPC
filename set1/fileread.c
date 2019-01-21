@@ -14,7 +14,7 @@ int main()
 
   char line[12];
   char time[6], maxtime[6], mintime[6];
-  float temp, maxtemp=-20, mintemp=40;
+  float temp, maxtemp=-100, mintemp=100;
 
   while (!feof(fp))
   {
