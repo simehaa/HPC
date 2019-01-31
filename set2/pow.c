@@ -8,7 +8,7 @@ double powint(double x, int y) {
 }
 
 int main() {
-  int a = powint(2,5);
-  printf("%d\n", a);
+  double a = powint(2.0,100);
+  printf("%lf\n", a);
   return 0;
 }
