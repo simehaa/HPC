@@ -60,6 +60,7 @@ for (j=0; j<N; j+=m) {
 }
 ```
 m must be chosen optimally! (balance read of B and write of A).
+**TLB**: *translation lookaside buffer*, a factor that reduces bandwidth, it caches the mapping between logical and physical memory pages. Direct mapped cache of size C, every C/N iteration hits the same cache line. With a line length of Lc, the effective cache size is Ceff = Lc max(1, C/N).
 
 
 ## 3.5 Algorithm classification and access optimizations
