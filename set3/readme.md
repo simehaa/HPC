@@ -64,13 +64,28 @@ m must be chosen optimally! (balance read of B and write of A).
 
 
 ## 3.5 Algorithm classification and access optimizations
+Assumption for following optimization techniques: register pressure is not too large, otherwise the compiler will spill register data to cache: slow. Some terminology:
+* MMM: matrix-matrix multiplication
+* MVM: matrix-vector multiplication
+* sMVM: sparse MVM
+* JDS and CRS: schemes for sMVM
 ### O(N)/O(N)
+Arithmetic operations and no. of data transfers of order N. Optimization is limited. However, *loop fusion* often has room for improvement.
 ### O(N^2)/O(N^2)
+Typical in two-level loop nests: ex. dense matrix-vector multiplication, matrix transpose or matrix addition. *loop unrolling* can often be applied: outer loop is traversed with a stride **m** and inner loop is replicated **m** times (might need a remainder loop).
+Combination of loop unrolling and fusion: *unroll and jam*. Performance gain can get close to **a factor of two**.
+*loop blocking*: chunk up the size of the inner loops: increases cache hits.
 ### O(N^3)/O(N^2)
+No. of ops > no. of data items (ex. dens matrix-matrix multiplication and dense diagonalization): optimization potential is large. If main memory bandwidth and latency are **not** the limiting factors for performance, then the code is cache-bound. Linear algebra and matrix operations should be used from optimized libraries.
 
-## Case study: Sparse matrix-vector multiply
+## 3.6 Case study: Sparse matrix-vector multiply
+Key ingredient in most iterative matrix diagonalization algorithms. *sparse matrix*: no. of non-zero entries grows linearly with the no. of rows.
 ### Sparse matrix storage schemes
+Most important schemes:
+* CRS (compressed row storage), well-suited for cache-based microprocessors. Has one array with the column indices and one array which point to the first index in each row.
+* JDS (jagged diagonals storage), supports dependency and loop structures that are favorable on vector systems. All zeros are removed and all nonzeros are shifted left. Columns are stored in val and col_idx keeps the indices. jd_ptr holds start indices of the Nj jagged diagonals. perm stores the permutation map.
 ### Optimizing JDS sparse MVM
+Unroll and jam should be applied, but usually requires length of inner loop to be independent of the outer loop index (violated if jagged diagonals are generally not all of the same length). *loop peeling*, for m-way unrolling, cuts (m X x) chinks and leaves m-1 partial diagonals over for separate treatment.
 
 
 # Lecture notes
