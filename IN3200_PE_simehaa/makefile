@@ -2,13 +2,13 @@ CC := gcc
 PROFILE := -pg
 
 PROGRAMS = $(patsubst %.c,%.exe,$(wildcard *.c))
-DEP = pagerank.h
+DEP = PE_functions_simehaa.h
 
 .PHONY : clean
 
 # all: $(PROGRAMS)
 
-pagerank.exe : pagerank.c $(DEP)
+pagerank.exe : PE_main_simehaa.c PE_functions_simehaa.c $(DEP)
 	$(CC) $< -o $@ -lm
 
 clean :
