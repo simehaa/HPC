@@ -1,7 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "PE_functions_simehaa.h"
 
-void print_sparse_matrix(double* val, int* col_idx, int* row_ptr) {
+void swap(int *a, int *b) {
+  int t=*a; *a=*b; *b=t;
+}
+
+void sort_perm(int *arr, int *perm, int beg, int end) {
+  if (end > beg + 1) {
+    int piv = arr[perm[beg]], l = beg + 1, r = end;
+    while (l < r) {
+      if (arr[perm[l]] <= piv)
+        l++;
+      else
+        swap(&perm[l], &perm[--r]);
+    }
+    swap(&perm[--l], &perm[beg]);
+    sort_perm(arr, perm, beg, l);
+    sort_perm(arr, perm, r, end);
+  }
+}
+
+void print_sparse_matrix(double* val, int* col_idx, int* row_ptr, int nodes, int edges) {
   // Print of val array
   printf("\nval:");
   printf("\n[%f, ", val[0]);
@@ -63,9 +81,9 @@ void read_graph_from_file(char* filename) {
 
   // Find column values (constant along each column)
   double col_vals[edges];
-  double val = malloc(edges * sizeof *val);
-  int col_idx = malloc(edges * sizeof *col_idx);
-  int row_ptr[ = malloc(nodes * sizeof *row_ptr);
+  double *val = malloc(edges * sizeof *val);
+  int *col_idx = malloc(edges * sizeof *col_idx);
+  int *row_ptr = malloc(nodes * sizeof *row_ptr);
   int dangling_idx[nodes];
 
   int ctr = 0;
@@ -86,8 +104,10 @@ void read_graph_from_file(char* filename) {
     sum += number_incoming[i];
   }
 
-  // HARD WAY (but it works)
-  // Find col_idx and val
+  /* Find col_idx and val.
+   * HARD WAY (but it works, even if both FromNodeId
+   * and ToNodeId are randomly ordered
+   */
   ctr = 0;
   for (int i=0; i<nodes; i++) {
     for (int j=0; j<edges; j++) { // Many uneccessary long loops here
@@ -111,8 +131,8 @@ void read_graph_from_file(char* filename) {
       }
     }
   }*/
-  print_sparse_matrix(val, col_idx, row_ptr);
-  
+  print_sparse_matrix(val, col_idx, row_ptr, nodes, edges);
+
   free(FromNodeId);
   free(ToNodeId);
   free(number_outgoing);
