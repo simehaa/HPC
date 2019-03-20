@@ -2,6 +2,7 @@
 #define PE_FUNCTIONS_SIMEHAA_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <time.h>
 
 /*void swap(int*, int*);
@@ -30,6 +31,22 @@ void sort_perm(int *arr, int *perm, int beg, int end) {
   }
 }
 
+void sort_perm_double(double *arr, int *perm, int beg, int end) {
+  if (end > beg + 1) {
+    double piv = arr[perm[beg]];
+    int l = beg + 1, r = end;
+    while (l < r) {
+      if (arr[perm[l]] <= piv)
+        l++;
+      else
+        swap(&perm[l], &perm[--r]);
+    }
+    swap(&perm[--l], &perm[beg]);
+    sort_perm_double(arr, perm, beg, l);
+    sort_perm_double(arr, perm, r, end);
+  }
+}
+
 void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
     numDangling, double** val, int** col_idx, int** row_ptr, int** dangling_idx)
 {
@@ -49,8 +66,9 @@ void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
   read = getline(&line, &len, fp);
   sscanf(line, "%*s %*s %i %*s %i", &nodes, &edges);
   read = getline(&line, &len, fp);
-  if (maxEdges)
+  if (edges > maxEdges)
     edges = maxEdges;
+
 
   int *FromNodeId = malloc(edges * sizeof *FromNodeId);
   int *ToNodeId = malloc(edges * sizeof *ToNodeId);
@@ -140,28 +158,22 @@ void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
 
 void PageRank_iterations(double dampConst, double threshold, int nodes, int edges,
     int numDangling, double** val, int* col_idx, int* row_ptr, int* dangling_idx,
-    double* x)
+    double* x, int* iter, int* maxiter, double* diff)
 {
   // factors and constants
   double nth = 1.0 / (double) nodes;
   double factor2 = dampConst*nth;
   double factor1 = nth - factor2;
-  int iter=0, maxiter = 1;
   int idx = 0;
-  double diff = 1.0;
-  double c; // (1 - d + d*W)/n
+  double maxdiff = 1.0, tempdiff;
   double *temp = malloc(edges * sizeof *temp);
   // initialize x
   for (int i=0; i<nodes; i++) x[i] = nth;
   // update val: d * val
   for (int i=0; i<edges; i++) (*val)[i] *= dampConst;
 
-  for (int i=0; i<nodes; i++){
-    printf("%f, ", x[i]);
-  }
-  printf("\n\n");
-
-  while (diff > threshold && iter < maxiter) {
+  // PageRank algorithm
+  while (maxdiff > threshold && (*iter) < (*maxiter)) {
     double W = 0;
     for (int i=0; i<numDangling; i++) W += x[dangling_idx[i]];
     W *= factor2;
@@ -174,18 +186,23 @@ void PageRank_iterations(double dampConst, double threshold, int nodes, int edge
         temp[i] += (*val)[idx] * x[col_idx[j]]; idx++;
       }
     }
-    for (int i=0; i<nodes; i++) x[i] = temp[i];
-    iter++;
+    maxdiff = temp[0] - x[0];
+    for (int i=0; i<nodes; i++) {
+      tempdiff = fabs(temp[i] - x[i]);
+      if (tempdiff > maxdiff)
+        maxdiff = tempdiff;
+      x[i] = temp[i];
+    }
+    (*iter)++;
   }
-  for (int i=0; i<nodes; i++){
-    printf("%f, ", x[i]);
-  }
-  printf("\n\n");
+  (*diff) = maxdiff;
+  free(temp);
 }
 
-/*void top_n_webpages(int n) {
-  //
-}*/
+void top_n_webpages(int nTopWebpages, int nodes, double* x, int* perm) {
+  for (int i=0; i<nodes; i++) perm[i] = i;
+  sort_perm_double(x, perm, 0, nodes);
+}
 
 
 
