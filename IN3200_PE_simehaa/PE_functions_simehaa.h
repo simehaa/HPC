@@ -5,51 +5,21 @@
 #include <math.h>
 #include <time.h>
 
-/*void swap(int*, int*);
+// Function declarations
+void read_graph_from_file(char*, int*, int* e, int, int*, double**, int**,
+  int**, int**);
+void PageRank_iterations(double, double, int, int, int, double**, int*, int*,
+  int*, double*, int*, int*, double*);
+void top_n_webpages(int, int, double*, int*);
+void sort_perm_double(double*, int*, int, int);
+void print_sparse_matrix(double*, int*, int*, int, int);
+void swap(int*, int*);
 void sort_perm(int*, int*, int, int);
 void print_sparse_matrix(double*, int*, int*, int, int);
-void read_graph_from_file(char*);*/
 
-void print_sparse_matrix(double*, int*, int*, int, int);
-
-void swap(int *a, int *b) {
-  int t=*a; *a=*b; *b=t;
-}
-
-void sort_perm(int *arr, int *perm, int beg, int end) {
-  if (end > beg + 1) {
-    int piv = arr[perm[beg]], l = beg + 1, r = end;
-    while (l < r) {
-      if (arr[perm[l]] <= piv)
-        l++;
-      else
-        swap(&perm[l], &perm[--r]);
-    }
-    swap(&perm[--l], &perm[beg]);
-    sort_perm(arr, perm, beg, l);
-    sort_perm(arr, perm, r, end);
-  }
-}
-
-void sort_perm_double(double *arr, int *perm, int beg, int end) {
-  if (end > beg + 1) {
-    double piv = arr[perm[beg]];
-    int l = beg + 1, r = end;
-    while (l < r) {
-      if (arr[perm[l]] <= piv)
-        l++;
-      else
-        swap(&perm[l], &perm[--r]);
-    }
-    swap(&perm[--l], &perm[beg]);
-    sort_perm_double(arr, perm, beg, l);
-    sort_perm_double(arr, perm, r, end);
-  }
-}
-
+// Functions
 void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
-    numDangling, double** val, int** col_idx, int** row_ptr, int** dangling_idx)
-{
+    numDangling, double** val, int** col_idx, int** row_ptr, int** dangling_idx) {
   FILE *fp;
   char *line = NULL;
   size_t len = 0;
@@ -66,9 +36,10 @@ void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
   read = getline(&line, &len, fp);
   sscanf(line, "%*s %*s %i %*s %i", &nodes, &edges);
   read = getline(&line, &len, fp);
-  if (edges > maxEdges)
+  if (edges > maxEdges) // Warning: do not remove: may cause deadlock
     edges = maxEdges;
-
+    // if maxEdges > edges: (also true if maxEdges is 0)
+    // edges is simply the total number of edges specified in file.
 
   int *FromNodeId = malloc(edges * sizeof *FromNodeId);
   int *ToNodeId = malloc(edges * sizeof *ToNodeId);
@@ -146,9 +117,6 @@ void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
     (*col_idx)[i] = FromNodeId[perm[i]];
     (*val)[i] = col_vals[(*col_idx)[i]];
   }
-
-  // print_sparse_matrix(val, col_idx, row_ptr, nodes, edges);
-
   free(FromNodeId);
   free(ToNodeId);
   free(number_outgoing);
@@ -158,8 +126,7 @@ void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
 
 void PageRank_iterations(double dampConst, double threshold, int nodes, int edges,
     int numDangling, double** val, int* col_idx, int* row_ptr, int* dangling_idx,
-    double* x, int* iter, int* maxiter, double* diff)
-{
+    double* x, int* iter, int* maxiter, double* diff) {
   // factors and constants
   double nth = 1.0 / (double) nodes;
   double factor2 = dampConst*nth;
@@ -200,13 +167,56 @@ void PageRank_iterations(double dampConst, double threshold, int nodes, int edge
 }
 
 void top_n_webpages(int nTopWebpages, int nodes, double* x, int* perm) {
+  /* The perm array (holds all indices) is sorted in a way such that
+   * x[perm[0]], x[perm[1]], ... is increasing in the value of x
+   * This is done with the recursive function sort_perm_double
+   * (Modification of the famous sort function)
+   */
   for (int i=0; i<nodes; i++) perm[i] = i;
   sort_perm_double(x, perm, 0, nodes);
 }
 
+void sort_perm_double(double *arr, int *perm, int beg, int end) {
+  if (end > beg + 1) {
+    double piv = arr[perm[beg]];
+    int l = beg + 1, r = end;
+    while (l < r) {
+      if (arr[perm[l]] <= piv)
+        l++;
+      else
+        swap(&perm[l], &perm[--r]);
+    }
+    swap(&perm[--l], &perm[beg]);
+    sort_perm_double(arr, perm, beg, l);
+    sort_perm_double(arr, perm, r, end);
+  }
+}
 
+void swap(int *a, int *b) {
+  int t=*a; *a=*b; *b=t;
+}
 
-void print_sparse_matrix(double* val, int* col_idx, int* row_ptr, int nodes, int edges) {
+void sort_perm(int *arr, int *perm, int beg, int end) {
+  if (end > beg + 1) {
+    int piv = arr[perm[beg]], l = beg + 1, r = end;
+    while (l < r) {
+      if (arr[perm[l]] <= piv)
+        l++;
+      else
+        swap(&perm[l], &perm[--r]);
+    }
+    swap(&perm[--l], &perm[beg]);
+    sort_perm(arr, perm, beg, l);
+    sort_perm(arr, perm, r, end);
+  }
+}
+
+void print_sparse_matrix(double* val, int* col_idx, int* row_ptr, int nodes,
+  int edges) {
+  /* If the need for printing the CRS formatted matrix.
+   * This function simply prints the three arrays
+   * val, col_idx and row_ptr.
+   */
   // Print of val array
   printf("\nval:");
   printf("\n[%f, ", val[0]);
@@ -214,7 +224,6 @@ void print_sparse_matrix(double* val, int* col_idx, int* row_ptr, int nodes, int
     printf("%f, ", val[i]);
   }
   printf("%f]\n", val[edges-1]);
-
   // Print of col_idx array
   printf("\ncol_idx:");
   printf("\n[%i, ", col_idx[0]);
@@ -222,7 +231,6 @@ void print_sparse_matrix(double* val, int* col_idx, int* row_ptr, int nodes, int
     printf("%i, ", col_idx[i]);
   }
   printf("%i]\n", col_idx[edges-1]);
-
   // Print of row_ptr array
   printf("\nrow_ptr:");
   printf("\n[%i, ",row_ptr[0]);
