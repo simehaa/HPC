@@ -18,26 +18,27 @@ void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
   getline(&line, &len, fp);
   sscanf(line, "%*s %*s %i %*s %i", &nodes, &edges);
   getline(&line, &len, fp);
-  if (edges > maxEdges) // Warning: do not remove: may cause deadlock
+  if (maxEdges && edges <= maxEdges) // Warning: do not remove: may cause deadlock
     edges = maxEdges;
-    // if maxEdges > edges: (also true if maxEdges is 0)
-    // edges is simply the total number of edges specified in file.
 
   int *FromNodeId = malloc(edges * sizeof *FromNodeId);
   int *ToNodeId = malloc(edges * sizeof *ToNodeId);
   int *number_outgoing = calloc(nodes, sizeof *number_outgoing);
   int *number_incoming = calloc(nodes, sizeof *number_incoming);
-  int *perm = malloc(edges * sizeof *perm);
-
+  int edgeCount = 0;
+  int from, to;
   // Extract data
   for (int i=0; i<edges; i++) {
     getline(&line, &len, fp);
-    sscanf(line, "%i %i", &FromNodeId[i], &ToNodeId[i]);
-    number_outgoing[FromNodeId[i]]++; // L[i]
-    number_incoming[ToNodeId[i]]++; // K[i]
-    perm[i] = i;
+    sscanf(line, "%i %i", &from, &to);
+    if (from != to) {
+      FromNodeId[edgeCount] = from;
+      ToNodeId[edgeCount] = to;
+      number_outgoing[from]++; // L[i]
+      number_incoming[to]++; // K[i]
+      edgeCount++;
+    }
   }
-
   /* Matrix element:
    * if K[j] != 0 and i != j,
    *     a_ij = 1/L[j],
@@ -46,6 +47,9 @@ void read_graph_from_file(char* filename, int* n, int* e, int maxEdges, int*
    * Matrix will be set up as a sparse matrix according to CRS.
    */
 
+  edges = edgeCount;
+  int *perm = malloc(edges * sizeof *perm);
+  for (int i=0; i<edges; i++) perm[i] = i;
   nodes = FromNodeId[edges-1] + 1; // According to maxedges
   (*n) = nodes;
   (*e) = edges;
@@ -117,8 +121,10 @@ void PageRank_iterations(double dampConst, double threshold, int nodes, int edge
   double maxdiff = 1.0, tempdiff;
   double *temp = malloc(edges * sizeof *temp);
   // initialize x
+  // #pragma omp parallel for
   for (int i=0; i<nodes; i++) x[i] = nth;
   // update val: d * val
+  // #pragma omp parallel for
   for (int i=0; i<edges; i++) (*val)[i] *= dampConst;
 
   // PageRank algorithm
@@ -129,6 +135,7 @@ void PageRank_iterations(double dampConst, double threshold, int nodes, int edge
     W += factor1;
     // Matrix vector multiplication
     idx = 0;
+    // #pragma omp parallel for
     for (int i=0; i<nodes; i++) {
       temp[i] = W;
       for (int j=row_ptr[i]; j<row_ptr[i+1]; j++) {
@@ -148,29 +155,23 @@ void PageRank_iterations(double dampConst, double threshold, int nodes, int edge
   free(temp);
 }
 
-void top_n_webpages(int nTopWebpages, int nodes, double* x, int* perm) {
-  /* The perm array (holds all indices) is sorted in a way such that
-   * x[perm[0]], x[perm[1]], ... is increasing in the value of x
-   * This is done with the recursive function sort_perm_double
-   * (Modification of the famous sort function)
+void top_n_webpages(int nTopWebpages, int nodes, double* x, double* score,
+    int* top_idx) {
+  /*
    */
-  for (int i=0; i<nodes; i++) perm[i] = i;
-  sort_perm_double(x, perm, 0, nodes);
-}
-
-void sort_perm_double(double *arr, int *perm, int beg, int end) {
-  if (end > beg + 1) {
-    double piv = arr[perm[beg]];
-    int l = beg + 1, r = end;
-    while (l < r) {
-      if (arr[perm[l]] <= piv)
-        l++;
-      else
-        swap(&perm[l], &perm[--r]);
+  for (int rank=0; rank<nTopWebpages; rank++)
+  {
+    double max_val = x[0];
+    int max_idx = 0;
+    for (int i=0; i<nodes; i++) {
+      if (x[i] > max_val) {
+        max_val = x[i];
+        max_idx = i;
+      }
     }
-    swap(&perm[--l], &perm[beg]);
-    sort_perm_double(arr, perm, beg, l);
-    sort_perm_double(arr, perm, r, end);
+    score[rank] = x[max_idx];
+    top_idx[rank] = max_idx;
+    x[max_idx] = 0;
   }
 }
 

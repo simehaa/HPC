@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     exit(0);
   }
   int n = 0, e = 0;
-  int maxEdges = 900000; // unspecified if 0,
+  int maxEdges = 0; // unspecified if 0,
   int numDangling = 0;
   int iter = 0, maxiter = 1000;
   double diff;
@@ -48,6 +48,10 @@ int main(int argc, char **argv) {
   PageRank_iterations(dampConst, threshold, n, e, numDangling, &val, col_idx,
                       row_ptr, dangling_idx, x, &iter, &maxiter, &diff);
   clock_gettime(CLOCK_REALTIME, &end);
+  free(val);
+  free(col_idx);
+  free(row_ptr);
+  free(dangling_idx);
   time_pagerank = (end.tv_sec-start.tv_sec) + 1e-9*(end.tv_nsec-start.tv_nsec);
 
   // Pagerank results
@@ -67,9 +71,10 @@ int main(int argc, char **argv) {
   printf("  PageRank_iterations    %1.5f\n", time_pagerank);
 
   // Find and print top n webpages
-  int* perm = malloc(n * sizeof *perm);
+  double* score = malloc(nTopWebpages * sizeof *score);
+  int* top_idx = malloc(nTopWebpages * sizeof *top_idx);
   clock_gettime(CLOCK_REALTIME, &start);
-  top_n_webpages(nTopWebpages, n, x, perm);
+  top_n_webpages(nTopWebpages, n, x, score, top_idx);
   clock_gettime(CLOCK_REALTIME, &end);
   time_topn = (end.tv_sec-start.tv_sec) + 1e-9*(end.tv_nsec-start.tv_nsec);
   printf("  top_n_webpages         %1.5f\n\n", time_topn);
@@ -77,17 +82,13 @@ int main(int argc, char **argv) {
   // Print top n webpages
   printf("\nTop %i webpages:\n", nTopWebpages);
   printf("  Rank:  Index:  Score:\n");
-  int ctr=1;
-  for (int i=n-1; i>=n-nTopWebpages; i--) {
-    printf("  %3i.  %7i  %1.5f\n", ctr++, perm[i], x[perm[i]]);
+  for (int i=0; i<nTopWebpages; i++) {
+    printf("  %3i.  %7i  %1.5f\n", i+1, top_idx[i], score[i]);
   }
 
   // Free allocations
-  free(val);
-  free(col_idx);
-  free(row_ptr);
-  free(dangling_idx);
   free(x);
-  free(perm);
+  free(score);
+  free(top_idx);
   return 0;
 }
