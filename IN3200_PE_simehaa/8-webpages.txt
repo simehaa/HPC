@@ -1,0 +1,21 @@
+# Directed graph (each unordered pair of nodes is saved once): 8-webpages.txt
+# Just an example
+# Nodes: 8 Edges: 17
+# FromNodeId    ToNodeId
+0       1
+0       2
+1       3
+2       4
+2       1
+3       4
+3       5
+3       1
+4       6
+4       7
+4       5
+5       7
+6       0
+6       4
+6       7
+7       5
+7       6

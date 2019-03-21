@@ -1,17 +1,22 @@
-CC := gcc
-PROFILE := -pg
+TARGET = pagerank.exe
+LIBS = -lm
+CC = gcc
+CFLAGS = -g -Wall
 
-PROGRAMS = $(patsubst %.c,%.exe,$(wildcard *.c)) PE_main_simehaa.exe
-DEP = PE_functions_simehaa.h
+.PHONY: default all clean
 
-.PHONY : clean
+default: $(TARGET)
+all: default
 
-# all: $(PROGRAMS)
+OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
+HEADERS = $(wildcard *.h)
 
-PE_main_simehaa.exe : PE_main_simehaa.c $(DEP)
-	$(CC) $< -o $@ -lm 
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-clean :
-	rm -f *.o $(PROGRAMS)
+$(TARGET): $(OBJECTS)
+	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
 
-print-%  : ; @echo $* = $($*)
+clean:
+	-rm -f *.o
+	-rm -f $(TARGET)
