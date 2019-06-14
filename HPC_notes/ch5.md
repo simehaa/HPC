@@ -52,7 +52,7 @@ Ideal case ($a = 1$): unlimited performance: $S_v = s + (1-s)N$ (**Gustafson's l
 ### Parallel efficiency
 Usually defined as: $\epsilon$ = (performance on N CPUs) / (N x performance on one CPU) = speedup/N.
 ### Serial performance vs. strong scalability
-One should measure scalability for som processor numbers and fix the model parameters by *least squares fitting*. One question to ask: invest scalar optimization effort into the serial or the parallel part of an application: performance is the relevant metric. Assume that the serial part can be accelerated by a factor $\xi$. $N \geq 1/s - 1$. If $s \ll 1$, parallel efficiency $\epsilon \sim 0.5$: enlarge N does not make sense, and one should focus on the parallel part. It is not possible to achieve the same speedup $\xi$ in both the serial and parallel part.
+One should measure scalability for some processor numbers and fix the model parameters by *least squares fitting*. One question to ask: invest scalar optimization effort into the serial or the parallel part of an application: performance is the relevant metric. Assume that the serial part can be accelerated by a factor $\xi$. $N \geq 1/s - 1$. If $s \ll 1$, parallel efficiency $\epsilon \sim 0.5$: enlarge N does not make sense, and one should focus on the parallel part. It is not possible to achieve the same speedup $\xi$ in both the serial and parallel part.
 ### Refined performance models
 Further analysis (Amdahl's and Gustafson's law are not appropriate) with additional communication factors, load imbalance, parallel startup overhead etc.
 ### Choosing the right scaling baseline

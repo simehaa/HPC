@@ -69,13 +69,13 @@ Assumption for following optimization techniques: register pressure is not too l
 * MVM: matrix-vector multiplication
 * sMVM: sparse MVM
 * JDS and CRS: schemes for sMVM
-### O(N)/O(N)
+### O(N) / O(N)
 Arithmetic operations and no. of data transfers of order N. Optimization is limited. However, *loop fusion* often has room for improvement.
-### O(N^2)/O(N^2)
+### O(N^2) / O(N^2)
 Typical in two-level loop nests: ex. dense matrix-vector multiplication, matrix transpose or matrix addition. *loop unrolling* can often be applied: outer loop is traversed with a stride **m** and inner loop is replicated **m** times (might need a remainder loop).
 Combination of loop unrolling and fusion: *unroll and jam*. Performance gain can get close to **a factor of two**.
 *loop blocking*: chunk up the size of the inner loops: increases cache hits.
-### O(N^3)/O(N^2)
+### O(N^3) / O(N^2)
 No. of ops > no. of data items (ex. dens matrix-matrix multiplication and dense diagonalization): optimization potential is large. If main memory bandwidth and latency are **not** the limiting factors for performance, then the code is cache-bound. Linear algebra and matrix operations should be used from optimized libraries.
 
 ## 3.6 Case study: Sparse matrix-vector multiply
